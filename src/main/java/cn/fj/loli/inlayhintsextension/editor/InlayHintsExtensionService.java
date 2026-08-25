@@ -55,10 +55,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service(Service.Level.PROJECT)
 public final class InlayHintsExtensionService implements Disposable {
-    private static final String EXCLUDE_NOTICE_KEY = "inlay.hints.extension.git.exclude.notice.v2.shown";
+    private static final String EXCLUDE_NOTICE_KEY = "inlay.hints.extension.git.exclude.notice.v3.shown";
     private static final int UPDATE_DELAY_MILLIS = 100;
 
     private final Project project;
+    private final @Nullable Path projectRoot;
     private final Alarm alarm;
     private final Map<Editor, EditorSession> sessions = new IdentityHashMap<>();
     private final Map<Editor, HintActivationSession> activationSessions = new IdentityHashMap<>();
@@ -71,6 +72,10 @@ public final class InlayHintsExtensionService implements Disposable {
 
     public InlayHintsExtensionService(Project project) {
         this.project = project;
+        String projectBasePath = project.getBasePath();
+        this.projectRoot = projectBasePath == null
+                ? null
+                : Path.of(projectBasePath).toAbsolutePath().normalize();
         this.alarm = new Alarm(Alarm.ThreadToUse.SWING_THREAD, this);
         project.getMessageBus().connect(this).subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
             @Override
@@ -100,7 +105,7 @@ public final class InlayHintsExtensionService implements Disposable {
         }
 
         Path sourcePath = Path.of(sourceFile.getPath());
-        Path sidecarPath = SidecarPathMapper.toSidecar(sourcePath).orElse(null);
+        Path sidecarPath = toSidecar(sourcePath);
         if (sidecarPath == null) {
             return;
         }
@@ -323,15 +328,7 @@ public final class InlayHintsExtensionService implements Disposable {
     }
 
     private boolean isRelevantVfsEvent(VFileEvent event) {
-        String path = event.getPath().replace('\\', '/');
-        if (!ExternalChangeScope.isInsideProject(project.getBasePath(), path)) {
-            return false;
-        }
-        boolean sidecarEvent = isSidecarPath(path);
-        if (event instanceof VFileContentChangeEvent) {
-            return sidecarEvent || path.contains("/src/");
-        }
-        return sidecarEvent || path.contains("/src/");
+        return ExternalChangeScope.isInsideProject(project.getBasePath(), event.getPath());
     }
 
     private void captureExternalSourceBeforeChange(VFileEvent event) {
@@ -349,7 +346,7 @@ public final class InlayHintsExtensionService implements Disposable {
             return;
         }
 
-        Path sidecarPath = SidecarPathMapper.toSidecar(Path.of(sourceFile.getPath())).orElse(null);
+        Path sidecarPath = toSidecar(Path.of(sourceFile.getPath()));
         if (sidecarPath == null || LocalFileSystem.getInstance().findFileByNioFile(sidecarPath) == null) {
             return;
         }
@@ -505,17 +502,18 @@ public final class InlayHintsExtensionService implements Disposable {
         return compareWhitespace ? first.equals(second) : first.trim().equals(second.trim());
     }
 
-    private static Path expectedSidecar(Editor editor) {
+    private Path expectedSidecar(Editor editor) {
         VirtualFile sourceFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
         if (sourceFile == null || !sourceFile.isInLocalFileSystem()) {
             return null;
         }
-        return SidecarPathMapper.toSidecar(Path.of(sourceFile.getPath())).orElse(null);
+        return toSidecar(Path.of(sourceFile.getPath()));
     }
 
-    private static boolean isSidecarPath(String path) {
-        return path.endsWith("." + SidecarPathMapper.SIDECAR_EXTENSION)
-                && path.contains("/" + SidecarPathMapper.SIDECAR_DIRECTORY + "/");
+    private @Nullable Path toSidecar(@NotNull Path sourcePath) {
+        return projectRoot == null
+                ? null
+                : SidecarPathMapper.toSidecar(projectRoot, sourcePath).orElse(null);
     }
 
     private static boolean hasOpenEditor(VirtualFile sourceFile) {
@@ -533,7 +531,7 @@ public final class InlayHintsExtensionService implements Disposable {
         if (sourceFile == null || !isActivationKeywordPresent(sourceDocument, match, keyword)) {
             return;
         }
-        Path sidecarPath = SidecarPathMapper.toSidecar(Path.of(sourceFile.getPath())).orElse(null);
+        Path sidecarPath = toSidecar(Path.of(sourceFile.getPath()));
         if (sidecarPath == null || ensureSidecarFile(sidecarPath, sourceDocument) == null) {
             return;
         }
@@ -686,7 +684,7 @@ public final class InlayHintsExtensionService implements Disposable {
         boolean deleteEmptyDirectories = InlayHintsExtensionSettings.getInstance()
                 .isDeleteEmptyDirectoriesAfterIhmFileDeletion();
         Path sidecarRoot = deleteEmptyDirectories
-                ? SidecarPathMapper.toSidecarRoot(Path.of(tracked.sourcePath)).orElse(null)
+                ? toSidecarRoot(Path.of(tracked.sourcePath))
                 : null;
         VirtualFile sidecarDirectory = sidecarFile.getParent();
         IOException[] fileFailure = new IOException[1];
@@ -764,6 +762,12 @@ public final class InlayHintsExtensionService implements Disposable {
         });
     }
 
+    private @Nullable Path toSidecarRoot(@NotNull Path sourcePath) {
+        return projectRoot == null
+                ? null
+                : SidecarPathMapper.toSidecarRoot(projectRoot, sourcePath).orElse(null);
+    }
+
     private static @Nullable Document getUtf8Document(
             FileDocumentManager fileDocumentManager,
             VirtualFile sidecarFile
@@ -789,7 +793,7 @@ public final class InlayHintsExtensionService implements Disposable {
                 .getNotificationGroup("Inlay Hints Extension")
                 .createNotification(
                         "Exclude local inlay hint files from Git",
-                        "Add **/inlay-hints/ to .git/info/exclude to keep these notes out of commits.",
+                        "Add /inlay-hints/ to .git/info/exclude to keep these notes out of commits.",
                         NotificationType.INFORMATION
                 )
                 .notify(project);
