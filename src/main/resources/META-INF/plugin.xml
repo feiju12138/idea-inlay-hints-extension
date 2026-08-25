@@ -8,6 +8,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>2.0.0</h3>
+        <ul>
+            <li>Map IHM files from the project root so root-level source files are supported.</li>
+            <li>Preserve the complete project-relative source path, including src when present.</li>
+            <li>Remove the incompatible 1.x mapping that treated the nearest src directory as the source root.</li>
+        </ul>
         <h3>1.0.0</h3>
         <ul>
             <li>Use inlay-hints as the sidecar directory for IHM files.</li>
