@@ -684,7 +684,7 @@ public final class InlayHintsExtensionService implements Disposable {
         boolean deleteEmptyDirectories = InlayHintsExtensionSettings.getInstance()
                 .isDeleteEmptyDirectoriesAfterIhmFileDeletion();
         Path sidecarRoot = deleteEmptyDirectories
-                ? toSidecarRoot(Path.of(tracked.sourcePath))
+                ? toSidecarRoot(Path.of(tracked.sourcePath), Path.of(sidecarFile.getPath()))
                 : null;
         VirtualFile sidecarDirectory = sidecarFile.getParent();
         IOException[] fileFailure = new IOException[1];
@@ -762,10 +762,10 @@ public final class InlayHintsExtensionService implements Disposable {
         });
     }
 
-    private @Nullable Path toSidecarRoot(@NotNull Path sourcePath) {
+    private @Nullable Path toSidecarRoot(@NotNull Path sourcePath, @NotNull Path sidecarPath) {
         return projectRoot == null
                 ? null
-                : SidecarPathMapper.toSidecarRoot(projectRoot, sourcePath).orElse(null);
+                : SidecarPathMapper.toSidecarRoot(projectRoot, sourcePath, sidecarPath).orElse(null);
     }
 
     private static @Nullable Document getUtf8Document(
