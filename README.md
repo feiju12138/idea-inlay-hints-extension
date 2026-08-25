@@ -4,17 +4,22 @@ Inlay Hints Extension is an IntelliJ IDEA plugin that displays local, line-orien
 
 ## File mapping
 
-The `inlay-hints` directory sits next to `src`. A sidecar file mirrors the complete path below `src` and appends `.ihm` to the complete source file name.
+The `inlay-hints` directory sits in the project root. A sidecar file mirrors the source file's complete project-relative path and appends `.ihm` to the complete source file name.
 
 ```text
-module/
+project/
+├── main.go
 ├── src/
 │   ├── main/java/com/example/Demo.java
 │   └── main/kotlin/com/example/Worker.kt
 └── inlay-hints/
-    ├── main/java/com/example/Demo.java.ihm
-    └── main/kotlin/com/example/Worker.kt.ihm
+    ├── main.go.ihm
+    └── src/
+        ├── main/java/com/example/Demo.java.ihm
+        └── main/kotlin/com/example/Worker.kt.ihm
 ```
+
+This is the 2.0 mapping format and is intentionally incompatible with 1.x. There is no fallback to the old layout: for example, `src/main.go` now maps to `inlay-hints/src/main.go.ihm`, not `inlay-hints/main.go.ihm`.
 
 Line 12 of `Demo.java.ihm` is shown at the end of line 12 in `Demo.java`. Empty lines produce no hint. Ctrl-clicking a hint opens its IHM file at the matching line; an ordinary click does not navigate.
 
@@ -30,10 +35,10 @@ The plugin itself contains no AI features. A language-agnostic Chinese prompt fo
 
 To use it:
 
-1. Add `**/inlay-hints/` to the repository-local `.git/info/exclude` file.
+1. Add `/inlay-hints/` to the repository-local `.git/info/exclude` file.
 2. Start an AI coding agent with workspace read/write access from the target project root.
 3. Open the prompt template. It targets the entire project by default; edit its scan scope first when only selected modules should be processed.
-4. Send the complete prompt inside the code block to the AI and allow it to create `.ihm` files under `inlay-hints`. The prompt fully defines the plain-text IHM format, path mapping, and line-alignment protocol, so the AI does not need prior knowledge of or access to this plugin.
+4. Send the complete prompt inside the code block to the AI and allow it to create `.ihm` files under the project-root `inlay-hints` directory. The prompt fully defines the plain-text IHM format, path mapping, and line-alignment protocol, so the AI does not need prior knowledge of or access to this plugin.
 5. Verify that every generated IHM path is correct and has exactly the same line positions and line count as its source file.
 6. Open the source in IDEA. The plugin renders the generated notes, and Ctrl-clicking a hint opens the matching IHM line for editing.
 
@@ -62,7 +67,7 @@ Open **Settings | Tools | Inlay Hints Extension** to:
 Add this pattern to the repository-local `.git/info/exclude` file:
 
 ```gitignore
-**/inlay-hints/
+/inlay-hints/
 ```
 
 The plugin shows this reminder once per project when it first detects a sidecar file.
