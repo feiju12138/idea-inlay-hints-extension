@@ -4,7 +4,7 @@ Inlay Hints Extension 是一款 IntelliJ IDEA 插件，用于把本地逐行笔�
 
 ## 文件映射
 
-`inlay-hints` 位于项目根目录。IHM 完整保留源文件相对于项目根目录的路径，并在完整源文件名后追加 `.ihm`。
+规范布局将 `inlay-hints` 放在项目根目录。IHM 完整保留源文件相对于项目根目录的路径，并在完整源文件名后追加 `.ihm`。
 
 ```text
 project/
@@ -19,7 +19,16 @@ project/
         └── main/kotlin/com/example/Worker.kt.ihm
 ```
 
-这是 2.0 的映射格式，有意不兼容 1.x，插件不会回退读取旧目录。例如，`src/main.go` 现在映射为 `inlay-hints/src/main.go.ihm`，不再是 `inlay-hints/main.go.ihm`。
+对于已有 IHM 文件，插件采用与 Node.js 查找模块相似的逐级向上搜索。以 `project/module/src/Demo.java` 为例，插件依次检查以下路径，并使用第一个实际存在的文件：
+
+```text
+project/module/src/Demo.java.ihm
+project/module/src/inlay-hints/Demo.java.ihm
+project/module/inlay-hints/src/Demo.java.ihm
+project/inlay-hints/module/src/Demo.java.ihm
+```
+
+每个 `inlay-hints` 目录都会保留源码相对于该目录父级的路径。因此，同级的 `Demo.java.ihm` 优先级最高，适合只测试单个源码文件；批量生成 IHM 时仍推荐使用项目根目录下的规范布局。
 
 `Demo.java.ihm` 第 12 行会显示在 `Demo.java` 第 12 行行末；空白 IHM 行不显示。按住 `Ctrl` 单击提示会打开对应 IHM 并定位到同一行，普通单击不跳转。
 
@@ -27,7 +36,7 @@ project/
 
 内联编辑框使用复合字体，即使从空白提示开始输入，中文及其他需要字体回退的字符也能正常显示。
 
-如果镜像 IHM 尚不存在，输入激活关键字会立即创建文件，并用空白行补齐到源码行数，从而保持逐行对齐。插件不会增加编辑器快捷按钮，也不包含任何 AI 功能。
+输入激活关键字后，插件会优先编辑搜索到的最高优先级 IHM 文件。如果完全没有映射文件，插件会向项目根逐级搜索，并在最近一个已经存在的 `inlay-hints` 目录中按相对源码路径创建文件；如果各层都没有 `inlay-hints` 目录，则在项目根目录创建规范目录和映射。自动创建永远不会把 IHM 裸文件直接放在源码同级。新文件会用空白行补齐到源码行数，从而保持逐行对齐。插件不会增加编辑器快捷按钮，也不包含任何 AI 功能。
 
 ## 使用 AI 生成解释
 
