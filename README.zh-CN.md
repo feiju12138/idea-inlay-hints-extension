@@ -4,17 +4,22 @@ Inlay Hints Extension 是一款 IntelliJ IDEA 插件，用于把本地逐行笔�
 
 ## 文件映射
 
-`inlay-hints` 与 `src` 同级。IHM 完整保留 `src` 下的相对路径，并在完整源文件名后追加 `.ihm`。
+`inlay-hints` 位于项目根目录。IHM 完整保留源文件相对于项目根目录的路径，并在完整源文件名后追加 `.ihm`。
 
 ```text
-module/
+project/
+├── main.go
 ├── src/
 │   ├── main/java/com/example/Demo.java
 │   └── main/kotlin/com/example/Worker.kt
 └── inlay-hints/
-    ├── main/java/com/example/Demo.java.ihm
-    └── main/kotlin/com/example/Worker.kt.ihm
+    ├── main.go.ihm
+    └── src/
+        ├── main/java/com/example/Demo.java.ihm
+        └── main/kotlin/com/example/Worker.kt.ihm
 ```
+
+这是 2.0 的映射格式，有意不兼容 1.x，插件不会回退读取旧目录。例如，`src/main.go` 现在映射为 `inlay-hints/src/main.go.ihm`，不再是 `inlay-hints/main.go.ihm`。
 
 `Demo.java.ihm` 第 12 行会显示在 `Demo.java` 第 12 行行末；空白 IHM 行不显示。按住 `Ctrl` 单击提示会打开对应 IHM 并定位到同一行，普通单击不跳转。
 
@@ -30,10 +35,10 @@ module/
 
 使用步骤：
 
-1. 先将 `**/inlay-hints/` 加入仓库本地的 `.git/info/exclude`。
+1. 先将 `/inlay-hints/` 加入仓库本地的 `.git/info/exclude`。
 2. 在项目根目录启动能够读写工作区的 AI 编程助手。
 3. 打开提示词范文；默认覆盖整个项目，如果只需要某个模块，先修改范文中的扫描范围。
-4. 将代码块内的完整提示词发送给 AI，并允许它在 `inlay-hints` 目录中创建 `.ihm` 文件。提示词已经完整定义 IHM 的纯文本格式、路径映射和逐行对齐协议，AI 无需预先了解或安装本插件。
+4. 将代码块内的完整提示词发送给 AI，并允许它在项目根目录的 `inlay-hints` 中创建 `.ihm` 文件。提示词已经完整定义 IHM 的纯文本格式、路径映射和逐行对齐协议，AI 无需预先了解或安装本插件。
 5. AI 执行完成后，确认每个 IHM 路径映射正确，且与对应源文件行数一致。
 6. 回到 IDEA 打开对应源码。插件检测到 IHM 后会显示行末提示，按住 `Ctrl` 单击可跳转到对应 IHM 行继续编辑。
 
@@ -62,7 +67,7 @@ module/
 建议在仓库本地的 `.git/info/exclude` 中加入：
 
 ```gitignore
-**/inlay-hints/
+/inlay-hints/
 ```
 
 插件首次发现镜像 IHM 时会在当前项目中提示一次。
