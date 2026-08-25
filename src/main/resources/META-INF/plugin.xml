@@ -8,6 +8,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>2.1.0</h3>
+        <ul>
+            <li>Resolve adjacent IHM files before searching inlay-hints directories from the source directory up to the project root.</li>
+            <li>Edit the highest-priority existing IHM file when inline editing is activated.</li>
+            <li>Create missing IHM files in the nearest existing inlay-hints directory, or in the project-root inlay-hints directory when none exists.</li>
+        </ul>
         <h3>2.0.0</h3>
         <ul>
             <li>Map IHM files from the project root so root-level source files are supported.</li>
