@@ -8,8 +8,8 @@
 请按下述完整协议创建或更新 IHM 旁注文件。IHM 是与源码逐行对应的 UTF-8 纯文本文件：第 N 行文本是源文件第 N 行的解释，空行表示该行不显示解释。你不需要预先了解、安装或调用任何 IDEA 插件，只需严格按以下路径映射和逐行对齐规则生成文件。不要把解释写进源码，也不要修改任何源码。
 
 文件映射规则：
-1. 对位于 **/src/** 下的每个可阅读源代码文件，在与 src 同级的 inlay-hints 目录中保留其相对路径。按项目实际使用的语言处理，不限于某一种源文件扩展名。
-2. IHM 文件名为完整源文件名后追加 .ihm。例如，Demo.java、Worker.kt、service.py、main.go 和 app.ts 分别对应 Demo.java.ihm、Worker.kt.ihm、service.py.ihm、main.go.ihm 和 app.ts.ihm。
+1. 对项目根目录内的每个可阅读源代码文件，在项目根目录的 inlay-hints 中完整保留其相对于项目根目录的路径。源码可以直接位于项目根目录，也可以位于 src 或其他任意层级目录；不要处理 inlay-hints 目录自身。按项目实际使用的语言处理，不限于某一种源文件扩展名。
+2. IHM 文件名为完整源文件名后追加 .ihm。例如，项目根目录的 main.go 对应 inlay-hints/main.go.ihm，src/Demo.java 对应 inlay-hints/src/Demo.java.ihm，module/src/Worker.kt 对应 inlay-hints/module/src/Worker.kt.ihm。
 3. IHM 必须使用 UTF-8 编码。源文件的每一行必须与 IHM 的同一行严格对应，不得增加额外的标题、列表、代码块或换行。
 4. 源码空行对应 IHM 空行。每个源文件处理完后，必须校验源文件与 IHM 的行数和行位置完全一致。
 
