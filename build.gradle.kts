@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "cn.fj.loli"
-version = "1.0.0"
+version = "2.0.0"
 
 val localIdePath = providers.gradleProperty("localIdePath")
 
