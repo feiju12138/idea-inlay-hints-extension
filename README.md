@@ -4,7 +4,7 @@ Inlay Hints Extension is an IntelliJ IDEA plugin that displays local, line-orien
 
 ## File mapping
 
-The `inlay-hints` directory sits in the project root. A sidecar file mirrors the source file's complete project-relative path and appends `.ihm` to the complete source file name.
+The canonical layout uses an `inlay-hints` directory in the project root. A sidecar file mirrors the source file's complete project-relative path and appends `.ihm` to the complete source file name.
 
 ```text
 project/
@@ -19,7 +19,16 @@ project/
         └── main/kotlin/com/example/Worker.kt.ihm
 ```
 
-This is the 2.0 mapping format and is intentionally incompatible with 1.x. There is no fallback to the old layout: for example, `src/main.go` now maps to `inlay-hints/src/main.go.ihm`, not `inlay-hints/main.go.ihm`.
+For an existing IHM file, the plugin uses Node.js-style upward lookup. Given `project/module/src/Demo.java`, it checks these paths in order and uses the first file that exists:
+
+```text
+project/module/src/Demo.java.ihm
+project/module/src/inlay-hints/Demo.java.ihm
+project/module/inlay-hints/src/Demo.java.ihm
+project/inlay-hints/module/src/Demo.java.ihm
+```
+
+Each `inlay-hints` directory preserves the source path relative to that directory's parent. An adjacent `Demo.java.ihm` therefore has the highest priority and is useful for testing one source file, while the project-root layout remains the recommended structure for generated IHM files.
 
 Line 12 of `Demo.java.ihm` is shown at the end of line 12 in `Demo.java`. Empty lines produce no hint. Ctrl-clicking a hint opens its IHM file at the matching line; an ordinary click does not navigate.
 
@@ -27,7 +36,7 @@ To edit a note without leaving the source editor, type the activation keyword at
 
 The inline editor uses a composite font so Chinese and other fallback glyphs remain readable when a new hint starts empty.
 
-If the mapped IHM file does not exist, entering the activation keyword creates it immediately with enough blank lines to preserve source-line alignment. The plugin does not add editor shortcut buttons or contain AI functionality.
+Entering the activation keyword edits the highest-priority existing IHM file. If no mapping file exists, the plugin creates one in the nearest existing `inlay-hints` directory found while walking toward the project root, preserving the relative source path below it. If no `inlay-hints` directory exists at any level, it creates the canonical project-root directory and mapping. Automatic creation never places an IHM file directly beside its source. New files contain enough blank lines to preserve source-line alignment. The plugin does not add editor shortcut buttons or contain AI functionality.
 
 ## Generate explanations with AI
 
